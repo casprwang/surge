@@ -25,6 +25,23 @@ const configurations = [
       'Deduplicate',
     ],
   },
+  {
+    name: 'StevenBlack',
+    homepage: 'https://github.com/StevenBlack/hosts?tab=readme-ov-file',
+    sources: [
+      {
+        source: 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts',
+        type: 'hosts',
+      },
+    ],
+    transformations: [
+      'RemoveComments',
+      'RemoveModifiers',
+      'Compress',
+      'Validate',
+      'Deduplicate',
+    ],
+  },
 ]
 
 function formatRule(rule) {
