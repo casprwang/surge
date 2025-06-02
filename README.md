@@ -18,6 +18,13 @@ A collection of curated domain blocklists automatically compiled from popular so
 - **Description**: A consolidated hosts file with base adware and malware blocking
 - **Format**: Domain format (`.example.com`)
 
+### OISD Big
+
+- **Source**: [OISD Big Domain List](https://oisd.nl)
+- **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt`
+- **Description**: One of the most comprehensive domain blocklists available, blocking ads, malware, tracking, and more
+- **Format**: Domain format (`.example.com`)
+
 ## 🚀 Usage
 
 ### DNS Filtering (Pi-hole, AdGuard Home, etc.)
@@ -27,6 +34,7 @@ Add the raw URLs to your DNS filtering solution's blocklist sources:
 ```
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro.txt
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/steven-black.txt
+https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt
 ```
 
 ### Surge (iOS/macOS)
@@ -37,6 +45,7 @@ Add to your Surge configuration:
 [Rule]
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro.txt,REJECT
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/steven-black.txt,REJECT
+RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt,REJECT
 ```
 
 ### Clash
@@ -59,9 +68,17 @@ rule-providers:
     path: ./ruleset/steven-black.yaml
     interval: 86400
 
+  oisd-big:
+    type: http
+    behavior: domain
+    url: 'https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt'
+    path: ./ruleset/oisd-big.yaml
+    interval: 86400
+
 rules:
   - RULE-SET,hagezi-pro,REJECT
   - RULE-SET,steven-black,REJECT
+  - RULE-SET,oisd-big,REJECT
 ```
 
 ## 🔄 Auto-Updates
