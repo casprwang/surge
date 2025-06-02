@@ -1,4 +1,4 @@
-name: Update Domain Blocklists
+name: Update Blocklists
 
 on:
   schedule:
@@ -7,12 +7,14 @@ on:
   workflow_dispatch: # Allow manual triggering
 
 jobs:
-  update-blocklists:
+  update:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -23,23 +25,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run blocklist compiler
+      - name: Run blocklist update script
         run: node script.js
 
       - name: Check for changes
-        id: verify-changed-files
+        id: git-check
         run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
+          git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
-        if: steps.verify-changed-files.outputs.changed == 'true'
+        if: steps.git-check.outputs.changes == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add domain-set/
-          git commit -m "Auto-update domain blocklists $(date -u +%Y-%m-%d)"
+          git commit -m "Update blocklists - $(date -u +"%Y-%m-%d %H:%M UTC")"
           git push
+
+      - name: No changes detected
+        if: steps.git-check.outputs.changes != 'true'
+        run: echo "No changes detected in blocklists"
