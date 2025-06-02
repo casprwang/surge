@@ -42,6 +42,15 @@ const configurations = [
       'Deduplicate',
     ],
   },
+  {
+    name: 'OISD Big',
+    sources: [
+      {
+        source: 'https://big.oisd.nl',
+      },
+    ],
+    transformations: ['RemoveComments', 'RemoveModifiers', 'Validate', 'Deduplicate'],
+  },
 ]
 
 function formatRule(rule) {
