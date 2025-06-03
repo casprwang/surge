@@ -8,6 +8,24 @@ const slugify = require('@sindresorhus/slugify')
 const distDir = join(__dirname, './domain-set')
 const configurations = [
   {
+    name: 'Hagezi Pro Plus',
+    homepage: 'https://github.com/hagezi/dns-blocklists',
+    sources: [
+      {
+        source:
+          'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.plus.txt',
+        type: 'hosts',
+      },
+    ],
+    transformations: [
+      'RemoveComments',
+      'RemoveModifiers',
+      'Compress',
+      'Validate',
+      'Deduplicate',
+    ],
+  },
+  {
     name: 'Hagezi Pro',
     homepage: 'https://github.com/hagezi/dns-blocklists?tab=readme-ov-file#pro',
     sources: [
