@@ -32,6 +32,27 @@ A collection of curated domain blocklists automatically compiled from popular so
 - **Description**: One of the most comprehensive domain blocklists available, blocking ads, malware, tracking, and more
 - **Format**: Domain format (`.example.com`)
 
+### SKK Reject
+
+- **Source**: [Sukka's Surge Ruleset](https://ruleset.skk.moe/)
+- **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject.conf`
+- **Description**: High-quality reject list maintained by Sukka for blocking ads and trackers
+- **Format**: Domain format (`.example.com`)
+
+### SKK Reject Extra
+
+- **Source**: [Sukka's Surge Ruleset Extra](https://ruleset.skk.moe/)
+- **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject_extra.conf`
+- **Description**: Additional reject rules from Sukka's comprehensive ruleset collection
+- **Format**: Domain format (`.example.com`)
+
+### Anti-AD
+
+- **Source**: [Privacy Protection Tools Anti-AD](https://github.com/privacy-protection-tools/anti-AD)
+- **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/anti-ad-surge2.txt`
+- **Description**: Comprehensive Chinese and international ad blocking list
+- **Format**: Domain format (`.example.com`)
+
 ### All Combined (Recommended)
 
 - **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/all.txt`
@@ -53,6 +74,9 @@ https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro-plu
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro.txt
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/steven-black.txt
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt
+https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject.conf
+https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject_extra.conf
+https://raw.githubusercontent.com/casprwang/surge/main/domain-set/anti-ad-surge2.txt
 ```
 
 ### Surge (iOS/macOS)
@@ -70,6 +94,9 @@ RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagez
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro.txt,REJECT
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/steven-black.txt,REJECT
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt,REJECT
+RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject.conf,REJECT
+RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject_extra.conf,REJECT
+RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/anti-ad-surge2.txt,REJECT
 ```
 
 ### Clash
@@ -119,21 +146,49 @@ rule-providers:
     path: ./ruleset/oisd-big.yaml
     interval: 86400
 
+  skk-reject:
+    type: http
+    behavior: domain
+    url: 'https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject.conf'
+    path: ./ruleset/skk-reject.yaml
+    interval: 86400
+
+  skk-reject-extra:
+    type: http
+    behavior: domain
+    url: 'https://raw.githubusercontent.com/casprwang/surge/main/domain-set/reject_extra.conf'
+    path: ./ruleset/skk-reject-extra.yaml
+    interval: 86400
+
+  anti-ad:
+    type: http
+    behavior: domain
+    url: 'https://raw.githubusercontent.com/casprwang/surge/main/domain-set/anti-ad-surge2.txt'
+    path: ./ruleset/anti-ad.yaml
+    interval: 86400
+
 rules:
   - RULE-SET,hagezi-pro-plus,REJECT
   - RULE-SET,hagezi-pro,REJECT
   - RULE-SET,steven-black,REJECT
   - RULE-SET,oisd-big,REJECT
+  - RULE-SET,skk-reject,REJECT
+  - RULE-SET,skk-reject-extra,REJECT
+  - RULE-SET,anti-ad,REJECT
 ```
 
 ## 🔄 Auto-Updates
 
 This repository automatically updates daily at 2 AM UTC via GitHub Actions. The workflow:
 
-1. Downloads the latest source lists
-2. Processes and deduplicates entries
-3. Converts to domain format
-4. Commits changes if updates are found
+1. Cleans the output directory to ensure fresh builds
+2. Downloads remote blocklist files in parallel using efficient curl commands
+3. Automatically removes comments and empty lines from downloaded files
+4. Downloads and processes the latest source lists from upstream providers
+5. Processes and deduplicates entries using efficient shell commands
+6. Converts to domain format (`.example.com`)
+7. Generates a consolidated `all.txt` file combining all sources with duplicates removed
+8. Commits changes if updates are found
 
 ## 🛠️ Local Development
 
@@ -184,11 +239,14 @@ Edit `script.js` and add new configurations to the `configurations` array:
 
 The lists are processed with the following transformations:
 
-- Comments removed
-- Duplicate entries removed
+- Remote files downloaded in parallel for efficiency
+- Comments and empty lines automatically removed using `grep` commands
+- Duplicate entries removed using efficient shell commands (`sort -u`)
 - Invalid entries filtered out
+- Wildcard domains (containing `*`) are skipped for safety
 - Compressed and optimized
 - Converted to domain format (`.example.com`)
+- All sources combined into a single deduplicated `all.txt` file
 
 ## ⚠️ Disclaimer
 
@@ -200,8 +258,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Credits
 
-- [Hagezi](https://github.com/hagezi/dns-blocklists) for the Pro blocklist
+- [Hagezi](https://github.com/hagezi/dns-blocklists) for the Pro and Pro Plus blocklists
 - [StevenBlack](https://github.com/StevenBlack/hosts) for the Unified Hosts list
+- [OISD](https://oisd.nl) for the comprehensive Big domain list
+- [Sukka](https://ruleset.skk.moe/) for the high-quality Surge rulesets
+- [Privacy Protection Tools](https://github.com/privacy-protection-tools/anti-AD) for the Anti-AD project
 - [AdGuard](https://github.com/AdguardTeam/HostlistCompiler) for the hostlist compiler
 
 ---

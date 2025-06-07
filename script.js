@@ -9,6 +9,39 @@ const { promisify } = require('util')
 
 const execAsync = promisify(exec)
 
+const remoteFiles = [
+  'https://ruleset.skk.moe/List/domainset/reject.conf',
+  'https://ruleset.skk.moe/List/domainset/reject_extra.conf',
+  'https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-surge2.txt',
+]
+
+async function downloadAndCleanRemoteFiles() {
+  console.log('📥 Downloading remote files...')
+  
+  await Promise.all(remoteFiles.map(async (url) => {
+    try {
+      // Generate filename from URL
+      const filename = url.split('/').pop() || `remote-${Date.now()}.txt`
+      const tempPath = join(distDir, `temp-${filename}`)
+      const finalPath = join(distDir, filename)
+      
+      // Download file using curl
+      const downloadCommand = `curl -s -L "${url}" -o "${tempPath}"`
+      await execAsync(downloadCommand)
+      
+      // Clean file: remove empty lines and lines starting with #
+      const cleanCommand = `grep -v '^#\\|^$' "${tempPath}" > "${finalPath}" && rm "${tempPath}"`
+      await execAsync(cleanCommand)
+      
+      console.log(`✅ Downloaded and cleaned: ${filename}`)
+    } catch (error) {
+      console.error(`❌ Error processing ${url}:`, error.message)
+    }
+  }))
+}
+
+
+
 const distDir = join(__dirname, './domain-set')
 const configurations = [
   {
@@ -135,12 +168,19 @@ async function main() {
   // remove all files in ./domain-set first 
   await fs.remove(distDir)
   await fs.ensureDir(distDir)
+  
+  // Download and clean remote files
+  await downloadAndCleanRemoteFiles()
+  
+  // Process configurations
   await Promise.all(
     configurations.map(async (config) => {
       const compiled = await compile(config)
       await outputCompiled(config, compiled)
     })
   )
+  
+  // Generate consolidated file
   await generateNonDuplicatedAll()
 }
 
