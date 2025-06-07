@@ -4,6 +4,13 @@ A collection of curated domain blocklists automatically compiled from popular so
 
 ## 📋 Available Blocklists
 
+### Hagezi Pro Plus
+
+- **Source**: [Hagezi DNS Blocklists Pro Plus](https://github.com/hagezi/dns-blocklists)
+- **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro-plus.txt`
+- **Description**: The most comprehensive Hagezi blocklist with additional blocking categories
+- **Format**: Domain format (`.example.com`)
+
 ### Hagezi Pro
 
 - **Source**: [Hagezi DNS Blocklists Pro](https://github.com/hagezi/dns-blocklists#pro)
@@ -25,13 +32,24 @@ A collection of curated domain blocklists automatically compiled from popular so
 - **Description**: One of the most comprehensive domain blocklists available, blocking ads, malware, tracking, and more
 - **Format**: Domain format (`.example.com`)
 
+### All Combined (Recommended)
+
+- **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/all.txt`
+- **Description**: A consolidated list combining all sources above with duplicates removed for maximum coverage
+- **Format**: Domain format (`.example.com`)
+
 ## 🚀 Usage
 
 ### DNS Filtering (Pi-hole, AdGuard Home, etc.)
 
-Add the raw URLs to your DNS filtering solution's blocklist sources:
-
+**Recommended**: Use the combined list for maximum coverage:
 ```
+https://raw.githubusercontent.com/casprwang/surge/main/domain-set/all.txt
+```
+
+Or add individual lists:
+```
+https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro-plus.txt
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro.txt
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/steven-black.txt
 https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt
@@ -39,10 +57,16 @@ https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt
 
 ### Surge (iOS/macOS)
 
-Add to your Surge configuration:
-
+**Recommended**: Use the combined list:
 ```ini
 [Rule]
+RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/all.txt,REJECT
+```
+
+Or add individual lists:
+```ini
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro-plus.txt,REJECT
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro.txt,REJECT
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/steven-black.txt,REJECT
 RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-big.txt,REJECT
@@ -50,10 +74,30 @@ RULE-SET,https://raw.githubusercontent.com/casprwang/surge/main/domain-set/oisd-
 
 ### Clash
 
-Add to your Clash configuration:
-
+**Recommended**: Use the combined list:
 ```yaml
 rule-providers:
+  blocklist-all:
+    type: http
+    behavior: domain
+    url: 'https://raw.githubusercontent.com/casprwang/surge/main/domain-set/all.txt'
+    path: ./ruleset/blocklist-all.yaml
+    interval: 86400
+
+rules:
+  - RULE-SET,blocklist-all,REJECT
+```
+
+Or add individual lists:
+```yaml
+rule-providers:
+  hagezi-pro-plus:
+    type: http
+    behavior: domain
+    url: 'https://raw.githubusercontent.com/casprwang/surge/main/domain-set/hagezi-pro-plus.txt'
+    path: ./ruleset/hagezi-pro-plus.yaml
+    interval: 86400
+
   hagezi-pro:
     type: http
     behavior: domain
@@ -76,6 +120,7 @@ rule-providers:
     interval: 86400
 
 rules:
+  - RULE-SET,hagezi-pro-plus,REJECT
   - RULE-SET,hagezi-pro,REJECT
   - RULE-SET,steven-black,REJECT
   - RULE-SET,oisd-big,REJECT
