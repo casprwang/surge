@@ -1,9 +1,13 @@
-'use strict'
+'use strict' 
 
 const compile = require('@adguard/hostlist-compiler')
 const { join } = require('path')
 const fs = require('fs-extra')
 const slugify = require('@sindresorhus/slugify')
+const { exec } = require('child_process')
+const { promisify } = require('util')
+
+const execAsync = promisify(exec)
 
 const distDir = join(__dirname, './domain-set')
 const configurations = [
@@ -109,12 +113,35 @@ async function outputCompiled(config, compiled) {
   stream.end()
 }
 
-async function main() {
-  await fs.ensureDir(distDir)
-  for (const config of configurations) {
-    const compiled = await compile(config)
-    await outputCompiled(config, compiled)
+// function to read all lines from all files of ./domain-set
+// remove duplicated lines
+// and save the result to ./domain-set/all.txt (in the same format as the other files)
+
+async function generateNonDuplicatedAll() {
+  // Use shell commands to concatenate all .txt files, sort and remove duplicates
+  const command = `cat "${distDir}"/*.txt | sort -u > "${distDir}/all.txt"`
+  
+  try {
+    await execAsync(command)
+    console.log('✅ Generated all.txt with unique domains')
+  } catch (error) {
+    console.error('❌ Error generating all.txt:', error.message)
+    throw error
   }
+}
+
+
+async function main() {
+  // remove all files in ./domain-set first 
+  await fs.remove(distDir)
+  await fs.ensureDir(distDir)
+  await Promise.all(
+    configurations.map(async (config) => {
+      const compiled = await compile(config)
+      await outputCompiled(config, compiled)
+    })
+  )
+  await generateNonDuplicatedAll()
 }
 
 main().catch((err) => {
