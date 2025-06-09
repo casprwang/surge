@@ -20,22 +20,22 @@ const remoteFiles = [
 
 async function downloadAndCleanRemoteFiles() {
   console.log('📥 Downloading remote files...')
-  
+
   await Promise.all(remoteFiles.map(async (url) => {
     try {
       // Generate filename from URL
       const filename = url.split('/').pop() || `remote-${Date.now()}.txt`
       const tempPath = join(distDir, `temp-${filename}`)
       const finalPath = join(distDir, filename)
-      
+
       // Download file using curl
       const downloadCommand = `curl -s -L "${url}" -o "${tempPath}"`
-      await pRetry(() => execAsync(downloadCommand), {retries: 5})
-      
+      await pRetry(() => execAsync(downloadCommand), { retries: 5 })
+
       // Clean file: remove empty lines and lines starting with #
       const cleanCommand = `grep -v '^#\\|^$' "${tempPath}" > "${finalPath}" && rm "${tempPath}"`
       await execAsync(cleanCommand)
-      
+
       console.log(`✅ Downloaded and cleaned: ${filename}`)
     } catch (error) {
       console.error(`❌ Error processing ${url}:`, error.message)
@@ -104,7 +104,7 @@ const configurations = [
     name: 'OISD Big',
     sources: [
       {
-        source: 'https://big.oisd.nl',
+        source: 'https://raw.githubusercontent.com/sjhgvr/oisd/refs/heads/main/abp_big.txt',
       },
     ],
     transformations: ['RemoveComments', 'RemoveModifiers', 'Validate', 'Deduplicate'],
@@ -157,11 +157,11 @@ async function updateReadmeWithStats(lineCount) {
   try {
     const readmePath = join(__dirname, 'README.md')
     let content = await fs.readFile(readmePath, 'utf8')
-    
+
     // Update the All Combined section with current stats
     const statsLine = `- **Total Domains**: ${lineCount.toLocaleString()} unique entries`
     const pattern = /- \*\*Total Domains\*\*: [\d,]+ unique entries/
-    
+
     if (pattern.test(content)) {
       content = content.replace(pattern, statsLine)
     } else {
@@ -171,14 +171,14 @@ async function updateReadmeWithStats(lineCount) {
         `- **Description**: A consolidated list combining all sources above with duplicates removed for maximum coverage\n${statsLine}`
       )
     }
-    
+
     // Update the last updated timestamp at the top of the file
     const now = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
     content = content.replace(
       /(\*\*Last Updated\*\*: ).*(\n)/,
       `$1${now} (${lineCount.toLocaleString()} domains)$2`
     )
-    
+
     await fs.writeFile(readmePath, content)
     console.log('✅ Updated README with current statistics')
   } catch (error) {
@@ -189,17 +189,17 @@ async function updateReadmeWithStats(lineCount) {
 async function generateNonDuplicatedAll() {
   // Use shell commands to concatenate all .txt files, sort and remove duplicates
   const command = `cat "${distDir}"/*.txt | sort -u > "${distDir}/all.txt"`
-  
+
   try {
     await execAsync(command)
-    
+
     // Count lines in all.txt
     const countCommand = `wc -l < "${distDir}/all.txt"`
     const { stdout } = await execAsync(countCommand)
     const lineCount = parseInt(stdout.trim())
-    
+
     console.log(`✅ Generated all.txt with ${lineCount.toLocaleString()} unique domains`)
-    
+
     // Update README with the line count
     await updateReadmeWithStats(lineCount)
   } catch (error) {
@@ -213,10 +213,10 @@ async function main() {
   // remove all files in ./domain-set first 
   await fs.remove(distDir)
   await fs.ensureDir(distDir)
-  
+
   // Download and clean remote files
   await downloadAndCleanRemoteFiles()
-  
+
   // Process configurations
   await Promise.all(
     configurations.map(async (config) => {
@@ -224,7 +224,7 @@ async function main() {
       await outputCompiled(config, compiled)
     })
   )
-  
+
   // Generate consolidated file
   await generateNonDuplicatedAll()
 }
