@@ -132,9 +132,14 @@ async function outputCompiled(config, compiled) {
   }
 
   const stream = fs.createWriteStream(dest)
+  let processedCount = 0
 
-  for (const rule of compiled) {
-    const formatted = formatRule(rule)
+  // Handle both array and string formats from the compiler
+  const rules = Array.isArray(compiled) ? compiled : compiled.split('\n')
+
+  for (const rule of rules) {
+    const cleanRule = typeof rule === 'string' ? rule.trim() : String(rule).trim()
+    const formatted = formatRule(cleanRule)
 
     if (formatted) {
       if (formatted.includes('*')) {
@@ -143,10 +148,13 @@ async function outputCompiled(config, compiled) {
       }
 
       stream.write(formatted + '\n')
+      processedCount++
     }
   }
 
   stream.end()
+
+  console.log(`✅ Generated ${fileName} with ${processedCount.toLocaleString()} rules from ${rules.length.toLocaleString()} total entries`)
 }
 
 // function to read all lines from all files of ./domain-set
@@ -188,6 +196,18 @@ async function updateReadmeWithStats(lineCount) {
 
 async function generateNonDuplicatedAll() {
   // Use shell commands to concatenate all .txt files, sort and remove duplicates
+  console.log('📝 Generating consolidated all.txt file...')
+
+  // First, let's see what files we have
+  const listFilesCommand = `ls -la "${distDir}"/*.txt`
+  try {
+    const { stdout: fileList } = await execAsync(listFilesCommand)
+    console.log('Files to process:')
+    console.log(fileList)
+  } catch (error) {
+    console.log('No .txt files found or error listing files:', error.message)
+  }
+
   const command = `cat "${distDir}"/*.txt | sort -u > "${distDir}/all.txt"`
 
   try {
@@ -200,6 +220,18 @@ async function generateNonDuplicatedAll() {
 
     console.log(`✅ Generated all.txt with ${lineCount.toLocaleString()} unique domains`)
 
+    // Also count total lines before deduplication for comparison
+    const totalLinesCommand = `cat "${distDir}"/*.txt | wc -l`
+    try {
+      const { stdout: totalLines } = await execAsync(totalLinesCommand)
+      const totalCount = parseInt(totalLines.trim())
+      const duplicatesRemoved = totalCount - lineCount
+      console.log(`📊 Total lines before deduplication: ${totalCount.toLocaleString()}`)
+      console.log(`📊 Duplicates removed: ${duplicatesRemoved.toLocaleString()}`)
+    } catch (error) {
+      console.log('Could not count total lines:', error.message)
+    }
+
     // Update README with the line count
     await updateReadmeWithStats(lineCount)
   } catch (error) {
@@ -210,23 +242,40 @@ async function generateNonDuplicatedAll() {
 
 
 async function main() {
+  console.log('🚀 Starting domain blocklist compilation...')
+
   // remove all files in ./domain-set first 
+  console.log('🧹 Cleaning existing domain-set directory...')
   await fs.remove(distDir)
   await fs.ensureDir(distDir)
 
   // Download and clean remote files
+  console.log('📥 Downloading and cleaning remote files...')
   await downloadAndCleanRemoteFiles()
 
   // Process configurations
+  console.log('📝 Processing blocklist configurations...')
   await Promise.all(
-    configurations.map(async (config) => {
-      const compiled = await compile(config)
-      await outputCompiled(config, compiled)
+    configurations.map(async (config, index) => {
+      console.log(`[${index + 1}/${configurations.length}] Processing ${config.name}...`)
+      try {
+        const compiled = await compile(config)
+        await outputCompiled(config, compiled)
+        console.log(`✅ Completed ${config.name}`)
+      } catch (error) {
+        console.error(`❌ Failed to process ${config.name}:`, error.message)
+        throw error // Re-throw to stop execution
+      }
     })
   )
 
+  console.log('🔗 All individual blocklists processed successfully!')
+
   // Generate consolidated file
+  console.log('📊 Generating consolidated file...')
   await generateNonDuplicatedAll()
+
+  console.log('🎉 All blocklists processed and consolidated!')
 }
 
 main().catch((err) => {
