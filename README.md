@@ -1,5 +1,7 @@
 # Domain Blocklists
 
+**Last Updated**: 2025-06-09 (479,465 domains)
+
 A collection of curated domain blocklists automatically compiled from popular sources. These lists are updated daily and formatted for use with DNS filtering solutions, ad blockers, and network security tools.
 
 ## 📋 Available Blocklists
@@ -57,6 +59,7 @@ A collection of curated domain blocklists automatically compiled from popular so
 
 - **Raw URL**: `https://raw.githubusercontent.com/casprwang/surge/main/domain-set/all.txt`
 - **Description**: A consolidated list combining all sources above with duplicates removed for maximum coverage
+- **Total Domains**: 479,465 unique entries
 - **Format**: Domain format (`.example.com`)
 
 ## 🚀 Usage
@@ -266,5 +269,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [AdGuard](https://github.com/AdguardTeam/HostlistCompiler) for the hostlist compiler
 
 ---
-
-**Last Updated**: Auto-updated daily via GitHub Actions

@@ -1,5 +1,6 @@
 'use strict' 
 
+const pRetry = require('p-retry')
 const compile = require('@adguard/hostlist-compiler')
 const { join } = require('path')
 const fs = require('fs-extra')
@@ -27,7 +28,7 @@ async function downloadAndCleanRemoteFiles() {
       
       // Download file using curl
       const downloadCommand = `curl -s -L "${url}" -o "${tempPath}"`
-      await execAsync(downloadCommand)
+      await pRetry(execAsync(downloadCommand), {retries: 5})
       
       // Clean file: remove empty lines and lines starting with #
       const cleanCommand = `grep -v '^#\\|^$' "${tempPath}" > "${finalPath}" && rm "${tempPath}"`
@@ -150,13 +151,55 @@ async function outputCompiled(config, compiled) {
 // remove duplicated lines
 // and save the result to ./domain-set/all.txt (in the same format as the other files)
 
+async function updateReadmeWithStats(lineCount) {
+  try {
+    const readmePath = join(__dirname, 'README.md')
+    let content = await fs.readFile(readmePath, 'utf8')
+    
+    // Update the All Combined section with current stats
+    const statsLine = `- **Total Domains**: ${lineCount.toLocaleString()} unique entries`
+    const pattern = /- \*\*Total Domains\*\*: [\d,]+ unique entries/
+    
+    if (pattern.test(content)) {
+      content = content.replace(pattern, statsLine)
+    } else {
+      // Add stats line after the description in All Combined section
+      content = content.replace(
+        /- \*\*Description\*\*: A consolidated list combining all sources above with duplicates removed for maximum coverage/,
+        `- **Description**: A consolidated list combining all sources above with duplicates removed for maximum coverage\n${statsLine}`
+      )
+    }
+    
+    // Update the last updated timestamp at the top of the file
+    const now = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    content = content.replace(
+      /(\*\*Last Updated\*\*: ).*(\n)/,
+      `$1${now} (${lineCount.toLocaleString()} domains)$2`
+    )
+    
+    await fs.writeFile(readmePath, content)
+    console.log('✅ Updated README with current statistics')
+  } catch (error) {
+    console.error('❌ Error updating README:', error.message)
+  }
+}
+
 async function generateNonDuplicatedAll() {
   // Use shell commands to concatenate all .txt files, sort and remove duplicates
   const command = `cat "${distDir}"/*.txt | sort -u > "${distDir}/all.txt"`
   
   try {
     await execAsync(command)
-    console.log('✅ Generated all.txt with unique domains')
+    
+    // Count lines in all.txt
+    const countCommand = `wc -l < "${distDir}/all.txt"`
+    const { stdout } = await execAsync(countCommand)
+    const lineCount = parseInt(stdout.trim())
+    
+    console.log(`✅ Generated all.txt with ${lineCount.toLocaleString()} unique domains`)
+    
+    // Update README with the line count
+    await updateReadmeWithStats(lineCount)
   } catch (error) {
     console.error('❌ Error generating all.txt:', error.message)
     throw error
