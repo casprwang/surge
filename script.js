@@ -1,12 +1,14 @@
-'use strict' 
+import pRetry from 'p-retry'
+import compile from '@adguard/hostlist-compiler'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
-const pRetry = require('p-retry')
-const compile = require('@adguard/hostlist-compiler')
-const { join } = require('path')
-const fs = require('fs-extra')
-const slugify = require('@sindresorhus/slugify')
-const { exec } = require('child_process')
-const { promisify } = require('util')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+import fs from 'fs-extra'
+import slugify from '@sindresorhus/slugify'
+import { exec } from 'child_process'
+import { promisify } from 'util'
 
 const execAsync = promisify(exec)
 
@@ -28,7 +30,7 @@ async function downloadAndCleanRemoteFiles() {
       
       // Download file using curl
       const downloadCommand = `curl -s -L "${url}" -o "${tempPath}"`
-      await pRetry(execAsync(downloadCommand), {retries: 5})
+      await pRetry(() => execAsync(downloadCommand), {retries: 5})
       
       // Clean file: remove empty lines and lines starting with #
       const cleanCommand = `grep -v '^#\\|^$' "${tempPath}" > "${finalPath}" && rm "${tempPath}"`

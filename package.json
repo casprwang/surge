@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "dependencies": {
     "@adguard/hostlist-compiler": "^1.0.8",
     "@sindresorhus/slugify": "^1.1.0",
