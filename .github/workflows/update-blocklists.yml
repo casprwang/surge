@@ -41,7 +41,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add domain-set/
+          git add domain-set/ README.md
           git commit -m "Update blocklists - $(date -u +"%Y-%m-%d %H:%M UTC")"
           git push
 
