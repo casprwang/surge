@@ -21,29 +21,29 @@ const remoteFiles = [
 async function downloadAndCleanRemoteFiles() {
   console.log('📥 Downloading remote files...')
 
-  await Promise.all(remoteFiles.map(async (url) => {
-    try {
-      // Generate filename from URL
-      const filename = url.split('/').pop() || `remote-${Date.now()}.txt`
-      const tempPath = join(distDir, `temp-${filename}`)
-      const finalPath = join(distDir, filename)
+  await Promise.all(
+    remoteFiles.map(async (url) => {
+      try {
+        // Generate filename from URL
+        const filename = url.split('/').pop() || `remote-${Date.now()}.txt`
+        const tempPath = join(distDir, `temp-${filename}`)
+        const finalPath = join(distDir, filename)
 
-      // Download file using curl
-      const downloadCommand = `curl -s -L "${url}" -o "${tempPath}"`
-      await pRetry(() => execAsync(downloadCommand), { retries: 5 })
+        // Download file using curl
+        const downloadCommand = `curl -s -L "${url}" -o "${tempPath}"`
+        await pRetry(() => execAsync(downloadCommand), { retries: 5 })
 
-      // Clean file: remove empty lines and lines starting with #
-      const cleanCommand = `grep -v '^#\\|^$' "${tempPath}" > "${finalPath}" && rm "${tempPath}"`
-      await execAsync(cleanCommand)
+        // Clean file: remove empty lines and lines starting with #
+        const cleanCommand = `grep -v '^#\\|^$' "${tempPath}" > "${finalPath}" && rm "${tempPath}"`
+        await execAsync(cleanCommand)
 
-      console.log(`✅ Downloaded and cleaned: ${filename}`)
-    } catch (error) {
-      console.error(`❌ Error processing ${url}:`, error.message)
-    }
-  }))
+        console.log(`✅ Downloaded and cleaned: ${filename}`)
+      } catch (error) {
+        console.error(`❌ Error processing ${url}:`, error.message)
+      }
+    })
+  )
 }
-
-
 
 const distDir = join(__dirname, './domain-set')
 const configurations = [
@@ -104,7 +104,8 @@ const configurations = [
     name: 'OISD Big',
     sources: [
       {
-        source: 'https://raw.githubusercontent.com/sjhgvr/oisd/refs/heads/main/abp_big.txt',
+        source:
+          'https://raw.githubusercontent.com/sjhgvr/oisd/refs/heads/main/abp_big.txt',
       },
     ],
     transformations: ['RemoveComments', 'RemoveModifiers', 'Validate', 'Deduplicate'],
@@ -154,7 +155,9 @@ async function outputCompiled(config, compiled) {
 
   stream.end()
 
-  console.log(`✅ Generated ${fileName} with ${processedCount.toLocaleString()} rules from ${rules.length.toLocaleString()} total entries`)
+  console.log(
+    `✅ Generated ${fileName} with ${processedCount.toLocaleString()} rules from ${rules.length.toLocaleString()} total entries`
+  )
 }
 
 // function to read all lines from all files of ./domain-set
@@ -165,20 +168,6 @@ async function updateReadmeWithStats(lineCount) {
   try {
     const readmePath = join(__dirname, 'README.md')
     let content = await fs.readFile(readmePath, 'utf8')
-
-    // Update the All Combined section with current stats
-    const statsLine = `- **Total Domains**: ${lineCount.toLocaleString()} unique entries`
-    const pattern = /- \*\*Total Domains\*\*: [\d,]+ unique entries/
-
-    if (pattern.test(content)) {
-      content = content.replace(pattern, statsLine)
-    } else {
-      // Add stats line after the description in All Combined section
-      content = content.replace(
-        /- \*\*Description\*\*: A consolidated list combining all sources above with duplicates removed for maximum coverage/,
-        `- **Description**: A consolidated list combining all sources above with duplicates removed for maximum coverage\n${statsLine}`
-      )
-    }
 
     // Update the last updated timestamp at the top of the file
     const now = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
@@ -240,11 +229,10 @@ async function generateNonDuplicatedAll() {
   }
 }
 
-
 async function main() {
   console.log('🚀 Starting domain blocklist compilation...')
 
-  // remove all files in ./domain-set first 
+  // remove all files in ./domain-set first
   console.log('🧹 Cleaning existing domain-set directory...')
   await fs.remove(distDir)
   await fs.ensureDir(distDir)
