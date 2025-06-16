@@ -172,8 +172,8 @@ async function updateReadmeWithStats(lineCount) {
     // Update the last updated timestamp at the top of the file
     const now = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
     content = content.replace(
-      /(\*\*Last Updated\*\*: ).*(\n)/,
-      `$1${now} (${lineCount.toLocaleString()} domains)$2`
+      /(\*\*Last\*\*: ).*(\n)/,
+      `$1${now} (${lineCount.toLocaleString()})$2`
     )
 
     await fs.writeFile(readmePath, content)
