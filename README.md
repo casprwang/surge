@@ -1,1 +1,1 @@
-**Last Updated**: 2025-06-09 (479,459 domains)
+**Last Updated**: 2025-06-16 (469,897 domains)
