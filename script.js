@@ -9,6 +9,7 @@ import fs from 'fs-extra'
 import slugify from '@sindresorhus/slugify'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import cron from 'node-cron'
 
 const execAsync = promisify(exec)
 
@@ -271,10 +272,24 @@ async function main() {
   console.log('🎉 All blocklists processed and consolidated!')
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+const runWithCron = process.argv.includes('--cron')
+
+if (runWithCron) {
+  // Schedule the task to run every day at 3:00 AM
+  cron.schedule('0 3 * * *', () => {
+    console.log('🕒 Running scheduled job: Compiling blocklists...')
+    main().catch((err) => {
+      console.error('❌ Cron job failed:', err)
+    })
+  })
+
+  console.log('✅ Script initialized. Cron job scheduled to run daily at 3:00 AM.')
+} else {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
 
 async function download1Hosts() {
   console.log('📥 Downloading 1Hosts Pro wildcards...')

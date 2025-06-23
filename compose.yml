@@ -1,0 +1,6 @@
+services:
+  rules-generator:
+    build: .
+    volumes:
+      - ./domain-set:/app/domain-set
+      - ./README.md:/app/README.md

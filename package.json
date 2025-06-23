@@ -1,9 +1,18 @@
 {
+  "name": "surge-rules",
+  "version": "1.0.0",
+  "description": "Surge rules",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js --cron",
+    "build": "node script.js"
+  },
   "type": "module",
   "dependencies": {
     "@adguard/hostlist-compiler": "^1.0.8",
     "@sindresorhus/slugify": "^1.1.0",
     "fs-extra": "^9.0.1",
+    "node-cron": "^4.1.1",
     "p-retry": "^6.2.1"
   }
 }
