@@ -46,71 +46,72 @@ async function downloadAndCleanRemoteFiles() {
 }
 
 const distDir = join(__dirname, './domain-set')
-const configurations = [
-  {
-    name: 'Hagezi Pro Plus',
-    homepage: 'https://github.com/hagezi/dns-blocklists',
-    sources: [
-      {
-        source:
-          'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.plus.txt',
-        type: 'hosts',
-      },
-    ],
-    transformations: [
-      'RemoveComments',
-      'RemoveModifiers',
-      'Compress',
-      'Validate',
-      'Deduplicate',
-    ],
-  },
-  {
-    name: 'Hagezi Pro',
-    homepage: 'https://github.com/hagezi/dns-blocklists?tab=readme-ov-file#pro',
-    sources: [
-      {
-        source:
-          'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.txt',
-        type: 'hosts',
-      },
-    ],
-    transformations: [
-      'RemoveComments',
-      'RemoveModifiers',
-      'Compress',
-      'Validate',
-      'Deduplicate',
-    ],
-  },
-  {
-    name: 'StevenBlack',
-    homepage: 'https://github.com/StevenBlack/hosts?tab=readme-ov-file',
-    sources: [
-      {
-        source: 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts',
-        type: 'hosts',
-      },
-    ],
-    transformations: [
-      'RemoveComments',
-      'RemoveModifiers',
-      'Compress',
-      'Validate',
-      'Deduplicate',
-    ],
-  },
-  {
-    name: 'OISD Big',
-    sources: [
-      {
-        source:
-          'https://raw.githubusercontent.com/sjhgvr/oisd/refs/heads/main/abp_big.txt',
-      },
-    ],
-    transformations: ['RemoveComments', 'RemoveModifiers', 'Validate', 'Deduplicate'],
-  },
-]
+const configurations =
+  /** @type {import('@adguard/hostlist-compiler').IConfiguration[]} */ ([
+    {
+      name: 'Hagezi Pro Plus',
+      homepage: 'https://github.com/hagezi/dns-blocklists',
+      sources: [
+        {
+          source:
+            'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.plus.txt',
+          type: 'hosts',
+        },
+      ],
+      transformations: [
+        'RemoveComments',
+        'RemoveModifiers',
+        'Compress',
+        'Validate',
+        'Deduplicate',
+      ],
+    },
+    {
+      name: 'Hagezi Pro',
+      homepage: 'https://github.com/hagezi/dns-blocklists?tab=readme-ov-file#pro',
+      sources: [
+        {
+          source:
+            'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.txt',
+          type: 'hosts',
+        },
+      ],
+      transformations: [
+        'RemoveComments',
+        'RemoveModifiers',
+        'Compress',
+        'Validate',
+        'Deduplicate',
+      ],
+    },
+    {
+      name: 'StevenBlack',
+      homepage: 'https://github.com/StevenBlack/hosts?tab=readme-ov-file',
+      sources: [
+        {
+          source: 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts',
+          type: 'hosts',
+        },
+      ],
+      transformations: [
+        'RemoveComments',
+        'RemoveModifiers',
+        'Compress',
+        'Validate',
+        'Deduplicate',
+      ],
+    },
+    {
+      name: 'OISD Big',
+      sources: [
+        {
+          source:
+            'https://raw.githubusercontent.com/sjhgvr/oisd/refs/heads/main/abp_big.txt',
+        },
+      ],
+      transformations: ['RemoveComments', 'RemoveModifiers', 'Validate', 'Deduplicate'],
+    },
+  ])
 
 function formatRule(rule) {
   const reg = /^\|\|(.*)\^$/
@@ -185,7 +186,7 @@ async function updateReadmeWithStats(lineCount) {
 
 async function generateNonDuplicatedAll() {
   // Use shell commands to concatenate all .txt files, sort and remove duplicates
-  console.log('📝 Generating consolidated all.txt file...')
+  console.log('📝 Generating consolidated full.txt file...')
 
   // First, let's see what files we have
   const listFilesCommand = `ls -la "${distDir}"/*.txt`
@@ -197,17 +198,17 @@ async function generateNonDuplicatedAll() {
     console.log('No .txt files found or error listing files:', error.message)
   }
 
-  const command = `cat "${distDir}"/*.txt | sort -u > "${distDir}/all.txt"`
+  const command = `cat "${distDir}"/*.txt | sort -u > "${distDir}/full.txt"`
 
   try {
     await execAsync(command)
 
-    // Count lines in all.txt
-    const countCommand = `wc -l < "${distDir}/all.txt"`
+    // Count lines in full.txt
+    const countCommand = `wc -l < "${distDir}/full.txt"`
     const { stdout } = await execAsync(countCommand)
     const lineCount = parseInt(stdout.trim())
 
-    console.log(`✅ Generated all.txt with ${lineCount.toLocaleString()} unique domains`)
+    console.log(`✅ Generated full.txt with ${lineCount.toLocaleString()} unique domains`)
 
     // Also count total lines before deduplication for comparison
     const totalLinesCommand = `cat "${distDir}"/*.txt | wc -l`
@@ -224,7 +225,7 @@ async function generateNonDuplicatedAll() {
     // Update README with the line count
     await updateReadmeWithStats(lineCount)
   } catch (error) {
-    console.error('❌ Error generating all.txt:', error.message)
+    console.error('❌ Error generating full.txt:', error.message)
     throw error
   }
 }
@@ -261,6 +262,10 @@ async function main() {
 
   // Generate consolidated file
   console.log('📊 Generating consolidated file...')
+
+  // download 1hosts pro wildcards
+  await download1Hosts()
+
   await generateNonDuplicatedAll()
 
   console.log('🎉 All blocklists processed and consolidated!')
@@ -270,3 +275,27 @@ main().catch((err) => {
   console.error(err)
   process.exit(1)
 })
+
+async function download1Hosts() {
+  console.log('📥 Downloading 1Hosts Pro wildcards...')
+
+  try {
+    const url = 'https://cdn.jsdelivr.net/gh/badmojr/1Hosts@master/Pro/wildcards.txt'
+    const filename = '1hosts-pro-wildcards.txt'
+    const tempPath = join(distDir, `temp-${filename}`)
+    const finalPath = join(distDir, filename)
+
+    // Download file using curl
+    const downloadCommand = `curl -s -L "${url}" -o "${tempPath}"`
+    await pRetry(() => execAsync(downloadCommand), { retries: 5 })
+
+    // Clean file: remove comments, empty lines, and process wildcard entries
+    const cleanCommand = `grep -v '^#\\|^$' "${tempPath}" | sed 's/^\\*//' > "${finalPath}" && rm "${tempPath}"`
+    await execAsync(cleanCommand)
+
+    console.log(`✅ Downloaded and cleaned: ${filename}`)
+  } catch (error) {
+    console.error(`❌ Error processing 1Hosts:`, error.message)
+    throw error
+  }
+}
